@@ -1,8 +1,7 @@
 import os
 from datetime import date, datetime, timedelta
 import json
-from colorama import init, Fore, Style # tem q instalar a bibloteca: pip install colorama
-init(autoreset=True)
+from colorama import init, Fore, Style # tem q instalar a bibloteca: pip install coloramainit(autoreset=True)
 
 prioridades = ["Urgente", "Alta", "Media", "Baixa"]
 mapa_prioridade = {
@@ -12,6 +11,8 @@ mapa_prioridade = {
     "Baixa": 3
 }
 
+init(autoreset=True)
+
 apagadas = 0
 finalizadas = 0
 pendentes = 0
@@ -20,7 +21,6 @@ os.system('cls')
 tarefas = []
 historico = []
 tarefas_arquivadas = []
-agora = datetime.now()
 formato_esperado = "%d/%m/%Y"
 
 def ver_historico():
@@ -28,7 +28,7 @@ def ver_historico():
     A função ver historico itera sobre o lista de dicionários historico com o método de listas enumerate()
     '''
     print(f"\n {Fore.YELLOW}=== Entrando na função de Ver Historico [📒] === \n")
-    print(f"\n{Fore.RED}======================\n")
+    print(f"\n======================\n")
 
     if not historico:
         print(f"{Fore.RED}--ERRO: Lista está vazia [❗]")
@@ -37,8 +37,8 @@ def ver_historico():
     
     for salvos in historico:
         for nome, conteudo in salvos.items():
-            print(f"{Fore.YELLOW}{nome} | {conteudo}")
-    print("\n======================\n")
+            print(f"{nome} | {conteudo}")
+    print(f"\n======================\n")
 
 def salvar_historico_json():
     '''
@@ -59,11 +59,11 @@ def carregar_json_historico():
             with open("historico.json", "r", encoding='utf-8') as f:
                 dados = json.load(f)
                 if not dados:
-                    print(f"\n {Fore.RED} === Nenhum arquivo {Style.BRIGHT}JSON historico{Style.RESET_ALL}{Fore.RED} encontrado. Vamos iniciar com uma lista vazia === \n")                    
+                    print(f"\n{Fore.RED} === Nenhum arquivo {Style.BRIGHT}JSON historico{Style.RESET_ALL}{Fore.RED} encontrado. Vamos iniciar com uma lista vazia ===\n")                    
                     return []
                 return dados
         else:
-            print(f"\n {Fore.RED} === Nenhum arquivo {Style.BRIGHT}JSON historico{Style.RESET_ALL}{Fore.RED} encontrado. Vamos iniciar com uma lista vazia === \n")
+            print(f"\n{Fore.RED}=== Nenhum arquivo {Style.BRIGHT}JSON historico{Style.RESET_ALL}{Fore.RED} encontrado. Vamos iniciar com uma lista vazia ===\n")
             return []
     except Exception as ex:
         print(f"\n-- {Fore.RED}ERRO: Ocorreu um erro inesperado em carregar {Style.BRIGHT}JSON historico{Style.RESET_ALL}{Fore.RED}: {ex} [❗]\n")
@@ -73,6 +73,10 @@ def apagar_tarefa(ind_tarefa):
     A função apagar tarefa não apaga literalmente da nossa lista de dicionários, mas muda o status dela para "Deletada". 
     Isso faz com que mesmo que a prioridade original dela seja de urgente ou qualquer outra, ela nunca seja concluída. 
     '''
+
+    if tarefas[ind_tarefa]['Status'] == "Deletada":
+        print(f"\n{Fore.RED}--ERRO: A tarefa {tarefas[ind_tarefa]['Nome da tarefa']} já foi apagada [❗]\n")
+        return
 
     while True:
         confirmar_se_apagar = input(f"{Fore.YELLOW}-> Você tem certeza que deseja apagar essa tarefa? {Style.BRIGHT}\nSe ela for apagada, você não vai conseguir recuperar ela:{Style.RESET_ALL} ").title()
@@ -86,8 +90,8 @@ def apagar_tarefa(ind_tarefa):
             apagada_historico = {tarefas[ind_tarefa]['Nome da tarefa']:f"Apagada em {formatando}"}
             historico.append(apagada_historico)
             salvar_historico_json()
-            break
             print(f"\n{Fore.GREEN}=== A tarefa {tarefas[ind_tarefa]["Nome da tarefa"]} foi deletada [🗑️] ===\n")
+            break
         elif confirmar_se_apagar == "Não":
             print(f"\n{Fore.BLUE}=== Saindo... === \n")
             break
@@ -250,6 +254,7 @@ def concluir_tarefa():
     A função concluir tarefa busca o item no topo da lista que é o item com a maior prioridade, pois foi organizado pela função organizar_lista
     e então executa ela.
     '''
+    global agora
 
     print(f"\n {Fore.YELLOW}=== Entrando na função de Concluir Tarefa [📒] === \n")
     if not tarefas:
@@ -277,7 +282,7 @@ A data da atividade deve ser informada desse jeito: {agora.day}/{agora.month}/{a
                     ver_se_arquivar = verificar_se_arquiva(data_objeto)
 
                     if ver_se_arquivar:
-                        print(f"\n {Fore.GREEN}=== Tarefa {tarefa} arquivada === \n")
+                        print(f"\n {Fore.GREEN}=== Tarefa {tarefa["Nome da tarefa"]} arquivada === \n")
                         tarefas_arquivadas.append(tarefa)
                         agora = datetime.now()
                         formatando = agora.strftime("%d/%m/%Y - %H:%M")
@@ -421,6 +426,9 @@ def relatorio():
     global apagadas
     global finalizadas
     global pendentes
+    apagadas = 0
+    finalizadas = 0
+    pendentes = 0
 
     for indice, tarefa in enumerate(tarefas):
         if tarefa['Status'] == "Deletada":
@@ -458,6 +466,7 @@ def ver_arquivadas():
 
 tarefas = carregar_json()
 tarefas_arquivadas = carregar_json_arquivada()
+historico = carregar_json_historico()
 
 while True:
     try:
